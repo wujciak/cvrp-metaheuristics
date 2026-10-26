@@ -14,15 +14,17 @@ public class GeneticAlgorithm {
     private final Mutation mutation;
     private final int popSize;
     private final int maxGenerations;
+    private final Random random;
 
-    public GeneticAlgorithm(Instance instance, Evaluator evaluator, int popSize, double crossoverP, double mutationP , int tournamentSize, int maxGenerations) {
+    public GeneticAlgorithm(Instance instance, Evaluator evaluator, int popSize, double crossoverP, double mutationP , int tournamentSize, int maxGenerations, Random random) {
         this.instance = instance;
         this.evaluator = evaluator;
-        this.selection = new Selection(tournamentSize);
-        this.crossover = new Crossover(crossoverP);
-        this.mutation = new Mutation(mutationP);
+        this.selection = new Selection(tournamentSize, random);
+        this.crossover = new Crossover(crossoverP, random);
+        this.mutation = new Mutation(mutationP, random);
         this.popSize = popSize;
         this.maxGenerations = maxGenerations;
+        this.random = random;
     }
 
     public List<Route> solve() {
@@ -63,7 +65,7 @@ public class GeneticAlgorithm {
         for (int i = 2; i <= instance.getDimension(); i++) {
             route.add(i);
         }
-        Collections.shuffle(route);
+        Collections.shuffle(route, random);
         return route;
     }
 

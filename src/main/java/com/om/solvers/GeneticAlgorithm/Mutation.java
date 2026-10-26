@@ -6,13 +6,14 @@ import java.util.Random;
 
 public class Mutation {
     private final double mutationProb;
+    private final Random rand;
 
-    public Mutation(double prob) {
+    public Mutation(double prob, Random rand) {
         mutationProb = prob;
+        this.rand = rand;
     }
 
     public void mutate(List<Integer> sequence) {
-        Random rand = new Random();
         if (rand.nextDouble() < mutationProb) {
             if (rand.nextBoolean()) {
                 swap(sequence);
@@ -23,7 +24,6 @@ public class Mutation {
     }
 
     public void swap(List<Integer> sequence) {
-        Random rand = new Random();
         int id1 = rand.nextInt(sequence.size());
         int id2 = rand.nextInt(sequence.size());
 
@@ -35,7 +35,6 @@ public class Mutation {
     }
 
     public void inverse(List<Integer> sequence) {
-        Random rand = new Random();
         int startIdx = rand.nextInt(sequence.size());
         int endIdx = rand.nextInt(sequence.size());
 

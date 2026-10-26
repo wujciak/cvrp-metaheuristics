@@ -10,10 +10,11 @@ import java.util.Random;
 
 public class RandomSearch {
     private final Instance instance;
-    private final Random random = new Random();
+    private final Random random;
 
-    public RandomSearch(Instance instance) {
+    public RandomSearch(Instance instance, Random random) {
         this.instance = instance;
+        this.random = random;
     }
 
     public List<Route> solve() {

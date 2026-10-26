@@ -6,6 +6,8 @@ import java.util.Map;
  * Representation of CVRP problem parameters.
  */
 public class Instance {
+    private final String name;
+    private final int optimum; // best known solution from the instance header, 0 if absent
     private final int dimension;
     private final int capacity;
     private final Map<Integer, int[]> coordMap;
@@ -13,7 +15,9 @@ public class Instance {
     private final int depotId;
     private final double[][] distanceMatrix;
 
-    public Instance(int dimension, int capacity, Map<Integer, int[]> coordMap, Map<Integer, Integer> demandMap, int depotId) {
+    public Instance(String name, int optimum, int dimension, int capacity, Map<Integer, int[]> coordMap, Map<Integer, Integer> demandMap, int depotId) {
+        this.name = name;
+        this.optimum = optimum;
         this.dimension = dimension;
         this.capacity = capacity;
         this.coordMap = coordMap;
@@ -38,6 +42,14 @@ public class Instance {
 
     public double calcDistanceTwoPoints(int[] point1, int[] point2) {
         return Math.sqrt(Math.pow(point2[0] - point1[0], 2) + Math.pow(point2[1] - point1[1], 2));
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getOptimum() {
+        return optimum;
     }
 
     public int getDimension() {

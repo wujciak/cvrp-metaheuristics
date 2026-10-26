@@ -7,19 +7,20 @@ import java.util.Random;
 
 public class Crossover {
     private final double crossoverProb;
+    private final Random rand;
 
-    public Crossover(double crossoverProb) {
+    public Crossover(double crossoverProb, Random rand) {
         this.crossoverProb = crossoverProb;
+        this.rand = rand;
     }
 
-    public Individual orderedCrossover(Individual parent1, Individual parent22) {
-        Random rand = new Random();
+    public Individual orderedCrossover(Individual parent1, Individual parent2) {
         if (rand.nextDouble() >= crossoverProb) {
             return new Individual(parent1.getInstance(), parent1.getSequence());
         }
 
        List<Integer> parentSeq1 = parent1.getSequence();
-       List<Integer> parentSeq2 = parent22.getSequence();
+       List<Integer> parentSeq2 = parent2.getSequence();
        int parentSeqSize1 = parentSeq1.size();
        int start = rand.nextInt(parentSeqSize1);
        int end = rand.nextInt(parentSeqSize1 - start) + start;

@@ -4,19 +4,20 @@ import java.util.*;
 
 public class Selection {
     public final int tournamentSize;
+    private final Random rand;
 
-    public Selection(int touurnamentSize) {
-        this.tournamentSize = touurnamentSize;
+    public Selection(int tournamentSize, Random rand) {
+        this.tournamentSize = tournamentSize;
+        this.rand = rand;
     }
 
     public Individual tournamentSelection(List<Individual> population) {
-        Random rand = new Random();
-        List<Individual> compatitors = new ArrayList<>();
+        List<Individual> competitors = new ArrayList<>();
 
-        while (compatitors.size() < tournamentSize) {
+        while (competitors.size() < tournamentSize) {
             Individual candidate = population.get(rand.nextInt(population.size()));
-            compatitors.add(candidate);
+            competitors.add(candidate);
         }
-        return Collections.min(compatitors, Comparator.comparing(Individual::getFitness));
+        return Collections.min(competitors, Comparator.comparing(Individual::getFitness));
     }
 }

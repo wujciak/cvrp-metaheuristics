@@ -7,18 +7,20 @@ import java.util.*;
 
 public class SimulatedAnnealing {
     private final Instance instance;
+    private final Random random;
 
     private static final double START_TEMPERATURE = 1000;
     private static final double END_TEMPERATURE = 0.01;
     private static final double COOLING_RATE = 0.995;
     private static final int ITERATIONS_PER_TEMP = 100;
 
-    public SimulatedAnnealing(Instance instance) {
+    public SimulatedAnnealing(Instance instance, Random random) {
         this.instance = instance;
+        this.random = random;
     }
 
     public List<Route> solve() {
-        RandomSearch RS = new RandomSearch(instance);
+        RandomSearch RS = new RandomSearch(instance, random);
         List<Route> routesSA = RS.solve();
 
         List<Route> currentSolution = deepCopyRoutes(routesSA);
@@ -27,8 +29,6 @@ public class SimulatedAnnealing {
         double bestDistance = currentDistance;
 
         double temperature = START_TEMPERATURE;
-
-        Random random = new Random();
 
         while (temperature > END_TEMPERATURE) {
             for (int i = 0; i < ITERATIONS_PER_TEMP; i++) {

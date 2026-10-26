@@ -7,189 +7,79 @@ import com.om.solvers.SimulatedAnnealing.SimulatedAnnealing;
 import com.om.utils.Evaluator;
 import com.om.utils.Instance;
 import com.om.utils.Parser;
+import com.om.utils.ResultWriter;
 import com.om.utils.Route;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.Random;
+import java.util.function.Function;
 
 public class Main {
-    public static void main(String[] args) {
-        String instanceName = "A-n37-k6.vrp.txt";
-        String filePath = "C:\\Users\\jakub\\IdeaProjects\\OptimizationStartUp\\src\\main\\resources\\instances\\" + instanceName;
-
-        int popSize = 100;
-        int generations = 100;
-        double crossoverProb = 0.7;
-        double mutationProb = 0.1;
-        int tournamentSize = 5;
-
+    public static void main(String[] args) throws IOException {
+        Options opts;
         try {
-            Instance instance = Parser.parse(filePath);
-            Evaluator evaluator = new Evaluator();
-
-            runRandomSearch(instance, instanceName);
-            runGeneticAlgorithm(instance, evaluator, popSize, crossoverProb, mutationProb, tournamentSize, generations, instanceName);
-            runGreedySearch(instance, instanceName);
-            runSimulatedAnnealing(instance, instanceName);
-        } catch (IOException e) {
-            System.err.println("Error loading file: " + e.getMessage());
+            opts = Options.parse(args);
+        } catch (IllegalArgumentException e) {
+            System.err.println(e.getMessage());
+            Options.printUsage();
+            System.exit(2);
+            return;
         }
-    }
+        ResultWriter writer = new ResultWriter(opts.outDir, opts.tag);
+        Evaluator evaluator = new Evaluator();
 
-    /**
-     * Method for running Random Search 1000 times
-     */
-    public static void runRandomSearch(Instance instance, String instanceName) {
-        int runs = 1000;
-        List<Double> scores = new ArrayList<>();
-        List<Route> bestSolution = null;
-        double bestScore = Double.MAX_VALUE;
+        for (Path path : opts.instances) {
+            Instance instance = Parser.parse(path.toString());
 
-        for (int i = 0; i < runs; i++) {
-            RandomSearch rs = new RandomSearch(instance);
-            List<Route> solution = rs.solve();
-            double score = Evaluator.evaluate(solution, instance.getDistanceMatrix());
-            scores.add(score);
-            if (score < bestScore) {
-                bestScore = score;
-                bestSolution = solution;
-            }
-        }
-
-        logResults("Random Search [1000x]", scores, bestSolution, instanceName, "C:\\Users\\Jakub\\IdeaProjects\\OptimizationStartUp\\src\\main\\resources\\results\\RS");
-    }
-
-    /**
-     * Method for running Genetic Algorithm 10 times
-     */
-    public static void runGeneticAlgorithm(Instance instance, Evaluator evaluator, int popSize, double crossoverP, double mutationP , int tournamentSize, int maxGenerations, String instanceName) {
-        int runs = 10;
-        List<Double> scores = new ArrayList<>();
-        List<Route> bestSolution = null;
-        double bestScore = Double.MAX_VALUE;
-
-        for (int i = 0; i < runs; i++) {
-            GeneticAlgorithm ga = new GeneticAlgorithm(instance, evaluator, popSize, crossoverP, mutationP, tournamentSize, maxGenerations);
-            List<Route> solution = ga.solve();
-            double score = Evaluator.evaluate(solution, instance.getDistanceMatrix());
-            scores.add(score);
-
-            if (score < bestScore) {
-                bestScore = score;
-                bestSolution = solution;
-            }
-
-            System.out.println("\nRun " + (i + 1) + " GA Total Distance: " + score);
-            for (Route route : solution) {
-                System.out.println(route);
-            }
-        }
-
-        logResults("Genetic Algorithm [10x]", scores, bestSolution, instanceName, "C:\\Users\\Jakub\\IdeaProjects\\OptimizationStartUp\\src\\main\\resources\\results\\GA");
-    }
-
-    /**
-     * Method for running greedy algorithm once
-     */
-    public static void runGreedySearch(Instance instance, String instanceName) {
-        List<Route> solution = GreedySearch.solve(instance);
-        double score = Evaluator.evaluate(solution, instance.getDistanceMatrix());
-
-        System.out.println("\nGreedy Search Total Distance: " + score);
-        for (Route route : solution) {
-            System.out.println(route);
-        }
-
-        logResults("Greedy Search [1x]", Collections.singletonList(score), solution, instanceName, "C:\\Users\\Jakub\\IdeaProjects\\OptimizationStartUp\\src\\main\\resources\\results\\GS");
-    }
-
-
-    /**
-     * Method for running Genetic Algorithm 10 times
-     */
-    public static void runSimulatedAnnealing(Instance instance, String instanceName) {
-        int runs = 10;
-        List<Double> scores = new ArrayList<>();
-        List<Route> bestSolution = null;
-        double bestScore = Double.MAX_VALUE;
-        for (int i = 0; i < runs; i++) {
-            SimulatedAnnealing sa = new SimulatedAnnealing(instance);
-            List<Route> solution = sa.solve();
-            double score = Evaluator.evaluate(solution, instance.getDistanceMatrix());
-            scores.add(score);
-
-            if (score < bestScore) {
-                bestScore = score;
-                bestSolution = solution;
-            }
-
-            System.out.println("\nRun " + (i + 1) + " SA Total Distance: " + score);
-            for (Route route : solution) {
-                System.out.println(route);
-            }
-        }
-
-        logResults("Simulated Annealing [10x]", scores, bestSolution, instanceName, "C:\\Users\\Jakub\\IdeaProjects\\OptimizationStartUp\\src\\main\\resources\\results\\SA");
-    }
-
-    /**
-     * Method for saving logs in a file
-     */
-    private static void logResults(String algorithm, List<Double> scores, List<Route> bestSolution, String instanceName, String RESULTS_DIR) {
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-        String fileName = algorithm + "_" + instanceName.replace(".txt", "") + "_" + timestamp + ".log";
-
-        File dir = new File(RESULTS_DIR);
-        if (!dir.exists()) {
-            boolean created = dir.mkdirs();
-            if (!created) {
-                System.err.println("Failed to create directory: " + RESULTS_DIR);
-                return;
-            }
-        }
-        File outputFile = new File(dir, fileName);
-
-        double best = scores.stream().min(Double::compareTo).orElse(Double.NaN);
-        double worst = scores.stream().max(Double::compareTo).orElse(Double.NaN);
-        double avg = scores.stream().mapToDouble(Double::doubleValue).average().orElse(Double.NaN);
-        double std = calculateStandardDeviation(scores, avg);
-
-        try (FileWriter writer = new FileWriter(outputFile, true)) {
-            writer.write("\n===========================================\n");
-            writer.write("Instance: " + instanceName + "\n");
-            writer.write("Algorithm: " + algorithm + "\n");
-            writer.write("Timestamp: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "\n");
-            writer.write("Iterations: " + scores.size() + "\n");
-            writer.write("Best*: " + best + "\n");
-            writer.write("Worst: " + worst + "\n");
-            writer.write("Avg: " + avg + "\n");
-            writer.write("Std: " + std + "\n");
-
-            if (bestSolution != null) {
-                writer.write("\nBest Solution Routes:\n");
-                for (Route route : bestSolution) {
-                    writer.write(route.toString() + "\n");
+            for (String algorithm : opts.algorithms) {
+                switch (algorithm) {
+                    case "rs" -> run("rs", "Random Search", "", opts.rsRuns, opts.seed,
+                            random -> new RandomSearch(instance, random).solve(), instance, writer);
+                    case "gs" -> run("gs", "Greedy Search", "", 1, opts.seed,
+                            random -> GreedySearch.solve(instance), instance, writer);
+                    case "sa" -> run("sa", "Simulated Annealing", "", opts.runs, opts.seed,
+                            random -> new SimulatedAnnealing(instance, random).solve(), instance, writer);
+                    case "ga" -> run("ga", "Genetic Algorithm",
+                            String.format(Locale.ROOT, "pop=%d gen=%d px=%.2f pm=%.2f tour=%d",
+                                    opts.popSize, opts.generations, opts.crossoverProb, opts.mutationProb, opts.tournamentSize),
+                            opts.runs, opts.seed,
+                            random -> new GeneticAlgorithm(instance, evaluator, opts.popSize, opts.crossoverProb,
+                                    opts.mutationProb, opts.tournamentSize, opts.generations, random).solve(),
+                            instance, writer);
+                    default -> throw new IllegalArgumentException("Unknown algorithm: " + algorithm);
                 }
             }
-
-            writer.write("===========================================\n\n");
-            System.out.println(algorithm + " results logged in: " + outputFile.getAbsolutePath());
-        } catch (IOException e) {
-            System.err.println("Error writing to log file: " + e.getMessage());
         }
     }
 
     /**
-     * Method for calculating standard deviation
+     * Method for running a solver several times with consecutive seeds and saving the summary
      */
-    private static double calculateStandardDeviation(List<Double> scores, double mean) {
-        double sumSquaredDiffs = scores.stream().mapToDouble(score -> Math.pow(score - mean, 2)).sum();
-        return Math.sqrt(sumSquaredDiffs / scores.size());
+    private static void run(String key, String algorithm, String params, int runs, long seed,
+                            Function<Random, List<Route>> solver, Instance instance, ResultWriter writer) throws IOException {
+        List<Double> scores = new ArrayList<>();
+        List<Route> bestSolution = null;
+        double bestScore = Double.MAX_VALUE;
+        long start = System.nanoTime();
+
+        for (int i = 0; i < runs; i++) {
+            List<Route> solution = solver.apply(new Random(seed + i));
+            if (!Evaluator.isFeasible(solution, instance)) {
+                throw new IllegalStateException(algorithm + " returned an infeasible solution for " + instance.getName());
+            }
+            double score = Evaluator.evaluate(solution, instance.getDistanceMatrix());
+            scores.add(score);
+            if (score < bestScore) {
+                bestScore = score;
+                bestSolution = solution;
+            }
+        }
+
+        double avgMillis = (System.nanoTime() - start) / 1e6 / runs;
+        writer.write(key, algorithm, params, instance, scores, bestSolution, avgMillis);
     }
 }

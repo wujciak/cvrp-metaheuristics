@@ -5,9 +5,15 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Parser {
+    private static final Pattern OPTIMUM = Pattern.compile("Optimal value:\\s*(\\d+)");
+
     public static Instance parse(String filePath) throws IOException {
+        String name = "";
+        int optimum = 0;
         int dimension = 0;
         int capacity = 0;
         Map<Integer, int[]> coordMap = new HashMap<>();
@@ -20,7 +26,16 @@ public class Parser {
             while ((line = br.readLine()) != null) {
                 line = line.trim();
 
-                if (line.startsWith("DIMENSION")) {
+                if (line.startsWith("NAME")) {
+                    name = line.split(":")[1].trim();
+                }
+                else if (line.startsWith("COMMENT")) {
+                    Matcher m = OPTIMUM.matcher(line);
+                    if (m.find()) {
+                        optimum = Integer.parseInt(m.group(1));
+                    }
+                }
+                else if (line.startsWith("DIMENSION")) {
                     dimension = Integer.parseInt(line.split(":")[1].trim());
                 }
                 else if (line.startsWith("CAPACITY")) {
@@ -66,6 +81,6 @@ public class Parser {
             }
         }
 
-        return new Instance(dimension, capacity, coordMap, demandMap, depotId);
+        return new Instance(name, optimum, dimension, capacity, coordMap, demandMap, depotId);
     }
 }
